@@ -2,23 +2,28 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal do Professor - Acesso Restrito</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <style>
-        .progress-bar { transition: width 1s ease-in-out; }
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+        }
         .dot { transition: all 0.3s ease-in-out; }
         input:checked ~ .dot { transform: translateX(100%); background-color: #ef4444; }
         input:checked ~ .block { background-color: #fee2e2; border-color: #fca5a5; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-gray-100 min-h-screen p-3 sm:p-6 md:p-8 font-sans">
 
     <!-- TELA DE BLOQUEIO / LOGIN INICIAL -->
-    <div id="tela-bloqueio" class="min-h-[85vh] flex items-center justify-center">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-md border border-gray-200 text-center">
+    <div id="tela-bloqueio" class="min-h-[85vh] flex items-center justify-center px-2">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-md border border-gray-200 text-center">
             <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -31,13 +36,13 @@
                 type="password"
                 id="input-senha-inicial"
                 placeholder="Digite a senha de admin"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-3 focus:outline-none focus:border-blue-500 text-sm text-center"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-3 focus:outline-none focus:border-blue-500 text-base text-center"
                 onkeydown="if(event.key==='Enter') autenticarAdmin()"
             >
             <button
                 id="btn-entrar-inicial"
                 onclick="autenticarAdmin()"
-                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl shadow-sm transition-all"
+                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-sm transition-all"
             >
                 Acessar Painel
             </button>
@@ -46,139 +51,154 @@
     </div>
 
     <!-- CONTEÚDO PRINCIPAL (OCULTO ATÉ AUTENTICAR) -->
-    <div id="app-conteudo" class="hidden max-w-6xl mx-auto">
+    <div id="app-conteudo" class="hidden max-w-5xl mx-auto">
         <!-- Cabeçalho -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Portal de Reforço</h1>
-                    <span class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider border border-amber-300">Admin</span>
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-4 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between md:block">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">Portal de Reforço</h1>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider border border-amber-300">Admin</span>
+                    </div>
+                    <p class="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">Gestão de Aulas e Financeiro</p>
                 </div>
-                <p class="text-slate-500 text-sm font-medium">Gestão Pedagógica e Financeira</p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
-                    <label class="mr-3 font-semibold text-slate-600 uppercase text-[10px] tracking-wider">Aluno:</label>
-                    <select id="select-aluno" onchange="renderizarDados()" class="bg-transparent border-none focus:ring-0 text-blue-600 font-bold cursor-pointer text-base outline-none">
-                        <option value="TODOS">📋 Todos os Alunos</option>
-                    </select>
-                </div>
-
-                <button onclick="abrirModalAula()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
-                    + Nova Aula
-                </button>
-
-                <button onclick="bloquearPainel()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all">
+                <button onclick="bloquearPainel()" class="md:hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs uppercase tracking-wider px-3 py-2 rounded-xl transition-all">
                     Sair
                 </button>
             </div>
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div class="flex items-center justify-between bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
+                    <label class="mr-2 font-semibold text-slate-600 uppercase text-[10px] tracking-wider">Aluno:</label>
+                    <select id="select-aluno" onchange="renderizarDados()" class="bg-transparent border-none focus:ring-0 text-blue-600 font-bold cursor-pointer text-base outline-none w-full text-right sm:text-left">
+                        <option value="TODOS">Todos os Alunos</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="abrirModalAula()" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-3 rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                        + Nova Aula
+                    </button>
+
+                    <button onclick="bloquearPainel()" class="hidden md:inline-flex bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider px-3.5 py-3 rounded-xl transition-all">
+                        Sair
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Grid Principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div id="coluna-evolucao" class="hidden lg:col-span-1">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-full">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center"><span class="w-2 h-6 bg-blue-500 rounded mr-2"></span>Evolução</h2>
-                    <div id="container-progresso" class="space-y-6"></div>
+        <!-- Painel de Aulas -->
+        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200">
+            <!-- Barra de Filtros e PDF -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-5 gap-4 pb-4 border-b border-slate-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+                        <span class="w-2 h-6 bg-green-500 rounded mr-2.5"></span>Histórico de Aulas
+                    </h2>
+                    <span id="contador-aulas" class="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">0 aulas</span>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:flex sm:items-center gap-2.5">
+                    <!-- Switch Pendentes -->
+                    <label class="flex items-center justify-between sm:justify-start cursor-pointer select-none bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                        <span class="mr-2 font-bold text-slate-600 text-xs">Pendentes</span>
+                        <div class="relative">
+                            <input type="checkbox" id="check-pendentes" onchange="renderizarDados()" class="sr-only">
+                            <div class="block bg-gray-200 w-9 h-5 rounded-full border border-gray-300"></div>
+                            <div class="dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow"></div>
+                        </div>
+                    </label>
+
+                    <!-- Input Valor/Hora -->
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                        <span class="text-slate-400 text-xs font-bold mr-1">R$</span>
+                        <input type="number" id="valor-hora" placeholder="Valor/h" min="0" step="0.01" class="bg-transparent text-base sm:text-xs font-bold text-slate-700 w-full sm:w-16 outline-none border-none p-0 focus:ring-0" />
+                    </div>
+
+                    <!-- Upload Logo PDF -->
+                    <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1.5" title="Incluir logomarca no PDF">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span id="label-logo" class="truncate">Logo PDF</span>
+                        <input type="file" id="input-logo" accept="image/png, image/jpeg" onchange="carregarLogo(event)" class="hidden" />
+                    </label>
+
+                    <!-- Botão Gerar PDF -->
+                    <button onclick="gerarPDF()" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>PDF</span>
+                    </button>
                 </div>
             </div>
 
-            <div id="coluna-aulas" class="lg:col-span-3">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center"><span class="w-2 h-6 bg-green-500 rounded mr-2"></span>Histórico de Aulas</h2>
-                        
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <label class="flex items-center cursor-pointer select-none text-sm">
-                                <span class="mr-2 font-bold text-slate-600 text-xs">Pendentes</span>
-                                <div class="relative">
-                                    <input type="checkbox" id="check-pendentes" onchange="renderizarDados()" class="sr-only">
-                                    <div class="block bg-gray-200 w-10 h-6 rounded-full border border-gray-300"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow"></div>
-                                </div>
-                            </label>
+            <!-- VISÃO MOBILE: Cards responsivos sem rolagem lateral -->
+            <div id="lista-cards-mobile" class="md:hidden space-y-3"></div>
 
-                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                                <span class="text-slate-400 text-xs font-bold mr-1">R$</span>
-                                <input type="number" id="valor-hora" placeholder="Valor/h" min="0" step="0.01" class="bg-transparent text-xs font-bold text-slate-700 w-16 outline-none border-none p-0 focus:ring-0" />
-                            </div>
+            <!-- VISÃO DESKTOP: Tabela limpa em largura total -->
+            <div class="hidden md:block">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead>
+                        <tr class="text-slate-400 uppercase text-[10px] tracking-widest border-b border-slate-100">
+                            <th class="py-3 px-2">Data</th>
+                            <th id="th-aluno" class="py-3 px-2">Aluno</th>
+                            <th class="py-3 px-2">Conteúdo</th>
+                            <th class="py-3 px-2 text-center">Horas</th>
+                            <th class="py-3 px-2 text-right">Status</th>
+                            <th class="py-3 px-2 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-aulas" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
 
-                            <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-xl border border-slate-200 transition-all flex items-center gap-1.5" title="Incluir logomarca no PDF">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span id="label-logo">Logo PDF</span>
-                                <input type="file" id="input-logo" accept="image/png, image/jpeg" onchange="carregarLogo(event)" class="hidden" />
-                            </label>
-
-                            <button onclick="gerarPDF()" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                PDF Pendentes
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead>
-                                <tr class="text-slate-400 uppercase text-[10px] tracking-widest border-b border-slate-100">
-                                    <th class="py-4 px-2">Data</th>
-                                    <th id="th-aluno" class="py-4 px-2">Aluno</th>
-                                    <th class="py-4 px-2">Conteúdo</th>
-                                    <th class="py-4 px-2 text-center">Horas</th>
-                                    <th class="py-4 px-2 text-right">Status</th>
-                                    <th class="py-4 px-2 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-aulas" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- Mensagem quando vazio -->
+            <div id="estado-vazio" class="hidden text-center py-10 text-slate-400 text-sm font-medium">
+                Nenhuma aula encontrada para este filtro.
             </div>
         </div>
     </div>
 
     <!-- Modal Cadastrar / Remarcar / Editar Aula -->
     <div id="modal-aula" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-gray-100">
             <h3 id="titulo-modal-aula" class="text-lg font-extrabold text-slate-800 mb-4">Nova Aula</h3>
             <input type="hidden" id="edit-row-index">
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Aluno</label>
-                    <input type="text" id="form-aluno" list="lista-alunos-datalist" placeholder="Nome do aluno" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="text" id="form-aluno" list="lista-alunos-datalist" placeholder="Nome do aluno" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base sm:text-sm focus:outline-none focus:border-blue-500">
                     <datalist id="lista-alunos-datalist"></datalist>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data</label>
-                        <input type="date" id="form-data" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="date" id="form-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base sm:text-sm focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Duração (Horas)</label>
-                        <input type="number" id="form-horas" step="0.5" min="0.5" value="1.5" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="number" id="form-horas" step="0.5" min="0.5" value="1.5" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base sm:text-sm focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Conteúdo / Disciplina</label>
-                    <input type="text" id="form-conteudo" placeholder="Ex: Matemática: Funções..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="text" id="form-conteudo" placeholder="Ex: Matemática: Funções..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base sm:text-sm focus:outline-none focus:border-blue-500">
                 </div>
 
-                <div class="flex items-center gap-2 pt-1">
-                    <input type="checkbox" id="form-pago" class="w-4 h-4 text-blue-600 rounded border-gray-300">
+                <div class="flex items-center gap-2.5 pt-1">
+                    <input type="checkbox" id="form-pago" class="w-5 h-5 text-blue-600 rounded border-gray-300">
                     <label for="form-pago" class="text-sm font-semibold text-slate-700">Aula já está paga</label>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2 mt-6">
-                <button onclick="fecharModalAula()" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl">Cancelar</button>
-                <button id="btn-salvar-aula" onclick="salvarAula()" class="px-5 py-2 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-xl flex items-center gap-2">Salvar Aula</button>
+                <button onclick="fecharModalAula()" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl">Cancelar</button>
+                <button id="btn-salvar-aula" onclick="salvarAula()" class="px-5 py-2.5 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-xl flex items-center gap-2">Salvar Aula</button>
             </div>
         </div>
     </div>
@@ -229,10 +249,6 @@
             const senha = document.getElementById('input-senha-inicial').value.trim();
             if (!senha) return mostrarErroLogin('Informe a senha de administrador.');
 
-            if (URL_APPS_SCRIPT.includes('COLE_SUA_URL')) {
-                return mostrarErroLogin('Configure a URL_APPS_SCRIPT no código.');
-            }
-
             const btn = document.getElementById('btn-entrar-inicial');
             btn.innerText = 'Verificando...';
             btn.disabled = true;
@@ -247,7 +263,8 @@
 
                 if (json.status === 'sucesso') {
                     senhaAdminAtual = senha;
-                    dadosGlobais = json.dados || [];
+                    // Filtra apenas os registros de Aula
+                    dadosGlobais = (json.dados || []).filter(d => d.tipo === 'Aula');
 
                     document.getElementById('tela-bloqueio').classList.add('hidden');
                     document.getElementById('app-conteudo').classList.remove('hidden');
@@ -289,7 +306,7 @@
                 });
                 const json = await res.json();
                 if (json.status === 'sucesso') {
-                    dadosGlobais = json.dados || [];
+                    dadosGlobais = (json.dados || []).filter(d => d.tipo === 'Aula');
                     popularMenuAlunos();
                     renderizarDados();
                 } else if (!silencioso) {
@@ -307,7 +324,7 @@
             const alunosUnicos = [...new Set(dadosGlobais.map(d => d.aluno))].sort();
             const valorAtual = select.value;
 
-            let optionsHTML = `<option value="TODOS" ${valorAtual === 'TODOS' ? 'selected' : ''}>📋 Todos os Alunos</option>`;
+            let optionsHTML = `<option value="TODOS" ${valorAtual === 'TODOS' ? 'selected' : ''}>Todos os Alunos</option>`;
             optionsHTML += alunosUnicos.map(nome => `<option value="${nome}" ${nome === valorAtual ? 'selected' : ''}>${nome}</option>`).join('');
 
             select.innerHTML = optionsHTML;
@@ -321,61 +338,76 @@
         function renderizarDados() {
             const selecionado = document.getElementById('select-aluno').value;
             const apenasPendentes = document.getElementById('check-pendentes').checked;
-            const cProgresso = document.getElementById('container-progresso');
             const tAulas = document.getElementById('tabela-aulas');
-
-            const colEvolucao = document.getElementById('coluna-evolucao');
-            const colAulas = document.getElementById('coluna-aulas');
+            const cardsMobile = document.getElementById('lista-cards-mobile');
             const thAluno = document.getElementById('th-aluno');
+            const estadoVazio = document.getElementById('estado-vazio');
+            const contadorAulas = document.getElementById('contador-aulas');
 
             if (selecionado === 'TODOS') {
-                colEvolucao.classList.add('hidden');
-                colAulas.classList.replace('lg:col-span-2', 'lg:col-span-3');
                 thAluno.classList.remove('hidden');
             } else {
-                colEvolucao.classList.remove('hidden');
-                colAulas.classList.replace('lg:col-span-3', 'lg:col-span-2');
                 thAluno.classList.add('hidden');
             }
 
-            cProgresso.innerHTML = '';
             tAulas.innerHTML = '';
+            cardsMobile.innerHTML = '';
 
-            const dadosFiltrados = selecionado === 'TODOS'
-                ? dadosGlobais
-                : dadosGlobais.filter(d => d.aluno === selecionado);
+            const aulasFiltradas = dadosGlobais.filter(i => {
+                if (selecionado !== 'TODOS' && i.aluno !== selecionado) return false;
+                if (apenasPendentes && i.pago) return false;
+                return true;
+            });
 
-            dadosFiltrados.forEach(i => {
-                if (i.tipo === 'Progresso' && selecionado !== 'TODOS') {
-                    const p = parseInt(i.valor) || 0;
-                    cProgresso.innerHTML += `<div>
-                        <div class="flex justify-between text-xs mb-2 font-bold text-slate-700"><span>${i.conteudo}</span><span>${p}%</span></div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-blue-500 h-2.5 rounded-full progress-bar" style="width:${p}%"></div>
+            contadorAulas.innerText = `${aulasFiltradas.length} ${aulasFiltradas.length === 1 ? 'aula' : 'aulas'}`;
+
+            if (aulasFiltradas.length === 0) {
+                estadoVazio.classList.remove('hidden');
+                return;
+            } else {
+                estadoVazio.classList.add('hidden');
+            }
+
+            aulasFiltradas.forEach(i => {
+                const dataFormatada = formatarDataBR(i.valor);
+                const aulaJson = encodeURIComponent(JSON.stringify(i));
+                const badgeStatus = i.pago
+                    ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-700">Pago</span>`
+                    : `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700">Pendente</span>`;
+
+                // 1. Linha da Tabela (Desktop)
+                tAulas.innerHTML += `<tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-3.5 px-2 text-slate-500 font-medium whitespace-nowrap">${dataFormatada}</td>
+                    ${selecionado === 'TODOS' ? `<td class="py-3.5 px-2 font-bold text-blue-600 whitespace-nowrap">${i.aluno}</td>` : ''}
+                    <td class="py-3.5 px-2 font-semibold text-slate-800">${i.conteudo}</td>
+                    <td class="py-3.5 px-2 text-center font-bold text-slate-500 whitespace-nowrap">${i.extra}h</td>
+                    <td class="py-3.5 px-2 text-right whitespace-nowrap">${badgeStatus}</td>
+                    <td class="py-3.5 px-2 text-right whitespace-nowrap">
+                        <button onclick="abrirModalEditar('${aulaJson}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-3">Editar</button>
+                        <button onclick="cancelarAula(${i.rowIndex}, '${i.aluno}', '${dataFormatada}')" class="text-red-500 hover:text-red-700 font-bold text-xs">Cancelar</button>
+                    </td>
+                </tr>`;
+
+                // 2. Card Compacto (Mobile - sem rolagem horizontal)
+                cardsMobile.innerHTML += `<div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3.5 flex flex-col gap-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">${dataFormatada}</span>
+                            ${selecionado === 'TODOS' ? `<span class="text-sm font-extrabold text-blue-600 truncate">${i.aluno}</span>` : ''}
                         </div>
-                    </div>`;
-                } else if (i.tipo === 'Aula') {
-                    if (apenasPendentes && i.pago) return;
+                        <div class="shrink-0">${badgeStatus}</div>
+                    </div>
 
-                    const dataFormatada = formatarDataBR(i.valor);
-                    const aulaJson = encodeURIComponent(JSON.stringify(i));
+                    <p class="text-sm font-semibold text-slate-800 leading-snug break-words">${i.conteudo}</p>
 
-                    tAulas.innerHTML += `<tr class="hover:bg-slate-50 transition-colors">
-                        <td class="py-4 px-2 text-slate-500 font-medium whitespace-nowrap">${dataFormatada}</td>
-                        ${selecionado === 'TODOS' ? `<td class="py-4 px-2 font-bold text-blue-600 whitespace-nowrap">${i.aluno}</td>` : ''}
-                        <td class="py-4 px-2 font-semibold text-slate-800">${i.conteudo}</td>
-                        <td class="py-4 px-2 text-center font-bold text-slate-500">${i.extra}h</td>
-                        <td class="py-4 px-2 text-right">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${i.pago ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                ${i.pago ? 'Pago' : 'Pendente'}
-                            </span>
-                        </td>
-                        <td class="py-4 px-2 text-right whitespace-nowrap">
-                            <button onclick="abrirModalEditar('${aulaJson}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-2" title="Editar / Remarcar">Editar</button>
-                            <button onclick="cancelarAula(${i.rowIndex}, '${i.aluno}', '${dataFormatada}')" class="text-red-500 hover:text-red-700 font-bold text-xs" title="Cancelar / Excluir">Cancelar</button>
-                        </td>
-                    </tr>`;
-                }
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-200/70">
+                        <span class="text-xs font-bold text-slate-500">Duração: <strong class="text-slate-700">${i.extra}h</strong></span>
+                        <div class="flex items-center gap-3">
+                            <button onclick="abrirModalEditar('${aulaJson}')" class="text-blue-600 font-bold text-xs px-2.5 py-1 bg-blue-50 rounded-lg">Editar</button>
+                            <button onclick="cancelarAula(${i.rowIndex}, '${i.aluno}', '${dataFormatada}')" class="text-red-600 font-bold text-xs px-2.5 py-1 bg-red-50 rounded-lg">Cancelar</button>
+                        </div>
+                    </div>
+                </div>`;
             });
         }
 
@@ -516,7 +548,7 @@
             const valorHoraInput = document.getElementById('valor-hora').value;
             const valorHora = parseFloat(valorHoraInput) || 0;
 
-            const aulasPendentes = dadosGlobais.filter(d => d.aluno === alunoSelecionado && d.tipo === 'Aula' && !d.pago);
+            const aulasPendentes = dadosGlobais.filter(d => d.aluno === alunoSelecionado && !d.pago);
 
             if (aulasPendentes.length === 0) {
                 alert(`Não há aulas pendentes para o aluno ${alunoSelecionado}.`);
