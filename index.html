@@ -180,6 +180,54 @@
         </div>
     </div>
 
+    <!-- Modal Registrar Pagamento da Aula -->
+    <div id="modal-pagamento" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-xl border border-gray-100">
+            <span class="text-[10px] font-black uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-md">Confirmar Recebimento</span>
+            <h3 class="text-lg font-extrabold text-slate-800 mt-1 mb-1">Registrar Pagamento</h3>
+            <p id="pag-info-aula" class="text-xs text-slate-500 mb-4">-</p>
+
+            <input type="hidden" id="pag-row-index">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Valor Pago (R$)</label>
+                    <input
+                        type="number"
+                        id="pag-valor"
+                        step="0.01"
+                        min="0"
+                        placeholder="0,00"
+                        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base font-bold text-slate-800 focus:outline-none focus:border-green-500"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Forma de Pagamento</label>
+                    <input
+                        type="text"
+                        id="pag-forma"
+                        list="lista-formas-pagamento"
+                        placeholder="Ex: Pix, Dinheiro, Cartão..."
+                        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-base sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-green-500"
+                    >
+                    <datalist id="lista-formas-pagamento">
+                        <option value="Pix">
+                        <option value="Dinheiro">
+                        <option value="Cartão de Crédito">
+                        <option value="Cartão de Débito">
+                        <option value="Transferência">
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="fecharModalPagamento()" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl">Cancelar</button>
+                <button id="btn-confirmar-pagamento" onclick="confirmarPagamentoAula()" class="px-5 py-2.5 text-xs font-bold bg-green-600 text-white hover:bg-green-700 rounded-xl">Marcar como Pago</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Resumo / Estatísticas do Aluno -->
     <div id="modal-resumo" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-gray-100 max-h-[90vh] overflow-y-auto">
@@ -191,7 +239,6 @@
                 <button onclick="fecharModalResumoAluno()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none px-1.5 py-0.5">✕</button>
             </div>
 
-            <!-- Filtro Mês / Ano -->
             <div class="mb-4">
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filtrar por Mês / Ano</label>
                 <select id="resumo-filtro-periodo" onchange="atualizarEstatisticasAluno()" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500">
@@ -199,7 +246,6 @@
                 </select>
             </div>
 
-            <!-- Cards de Métricas -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                     <p class="text-[10px] font-bold uppercase text-slate-400">Aulas Realizadas</p>
@@ -226,7 +272,6 @@
                 </div>
             </div>
 
-            <!-- Informações adicionais -->
             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2.5 text-xs">
                 <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-slate-500 shrink-0">Dia(s) preferido(s):</span>
@@ -243,7 +288,7 @@
             </div>
 
             <p id="resumo-aviso-valor-hora" class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-3 hidden">
-                Preencha o campo <strong>R$ Valor/h</strong> no painel principal para ver os valores em reais.
+                Preencha o campo <strong>R$ Valor/h</strong> no painel principal para calcular pendentes e aulas pagas sem valor específico.
             </p>
 
             <div class="flex justify-end mt-5">
@@ -254,7 +299,7 @@
 
     <!-- Modal Cadastrar / Remarcar / Editar Aula -->
     <div id="modal-aula" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-gray-100">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-gray-100 max-h-[90vh] overflow-y-auto">
             <h3 id="titulo-modal-aula" class="text-lg font-extrabold text-slate-800 mb-4">Nova Aula</h3>
             <input type="hidden" id="edit-row-index">
             
@@ -282,8 +327,19 @@
                 </div>
 
                 <div class="flex items-center gap-2.5 pt-1">
-                    <input type="checkbox" id="form-pago" class="w-5 h-5 text-blue-600 rounded border-gray-300">
+                    <input type="checkbox" id="form-pago" onchange="toggleCamposPagamentoForm()" class="w-5 h-5 text-blue-600 rounded border-gray-300">
                     <label for="form-pago" class="text-sm font-semibold text-slate-700">Aula já está paga</label>
+                </div>
+
+                <div id="campos-pagamento-form" class="hidden grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Valor Pago (R$)</label>
+                        <input type="number" id="form-valor-pago" step="0.01" min="0" placeholder="0,00" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Forma Pgto</label>
+                        <input type="text" id="form-forma-pagamento" list="lista-formas-pagamento" placeholder="Pix, Dinheiro..." class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-500">
+                    </div>
                 </div>
             </div>
 
@@ -352,7 +408,15 @@
         }
 
         function formatarMoedaBR(valor) {
-            return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+            return `R$ ${Number(valor || 0).toFixed(2).replace('.', ',')}`;
+        }
+
+        function obterValorAulaRecebido(aula, valorHoraPadrao) {
+            if (aula.valorPago !== null && aula.valorPago !== undefined && !isNaN(aula.valorPago)) {
+                return aula.valorPago;
+            }
+            const horas = parseFloat(aula.extra) || 0;
+            return horas * (valorHoraPadrao || 0);
         }
 
         function mostrarErroLogin(texto) {
@@ -486,9 +550,26 @@
             aulasFiltradas.forEach(i => {
                 const dataFormatada = formatarDataBR(i.valor);
                 const aulaJson = encodeURIComponent(JSON.stringify(i));
-                const badgeStatus = i.pago
-                    ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-700">Pago</span>`
-                    : `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700">Pendente</span>`;
+
+                let badgeStatus = '';
+                if (i.pago) {
+                    const detalhePago = [
+                        i.valorPago !== null && !isNaN(i.valorPago) ? formatarMoedaBR(i.valorPago) : '',
+                        i.formaPagamento || ''
+                    ].filter(Boolean).join(' • ');
+
+                    badgeStatus = `<span class="inline-flex flex-col items-end gap-0.5">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-700">Pago</span>
+                        ${detalhePago ? `<span class="text-[10px] font-bold text-green-700/80">${detalhePago}</span>` : ''}
+                    </span>`;
+                } else {
+                    badgeStatus = `<button
+                        type="button"
+                        onclick="abrirModalPagamento('${aulaJson}')"
+                        title="Clique para informar valor pago e forma de pagamento"
+                        class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 hover:bg-red-200 transition-all cursor-pointer"
+                    >Pendente</button>`;
+                }
 
                 tAulas.innerHTML += `<tr class="hover:bg-slate-50 transition-colors">
                     <td class="py-3.5 px-2 text-slate-500 font-medium whitespace-nowrap">${dataFormatada}</td>
@@ -503,8 +584,8 @@
                 </tr>`;
 
                 cardsMobile.innerHTML += `<div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3.5 flex flex-col gap-2">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0 flex-wrap">
                             <span class="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">${dataFormatada}</span>
                             ${selecionado === 'TODOS' ? `<span class="text-sm font-extrabold text-blue-600 truncate">${i.aluno}</span>` : ''}
                         </div>
@@ -522,6 +603,71 @@
                     </div>
                 </div>`;
             });
+        }
+
+        // --- MODAL PAGAMENTO AO CLICAR EM PENDENTE ---
+        function abrirModalPagamento(aulaEncoded) {
+            const aula = JSON.parse(decodeURIComponent(aulaEncoded));
+            const valorHora = parseFloat(document.getElementById('valor-hora').value) || 0;
+            const horas = parseFloat(aula.extra) || 0;
+            const sugestaoValor = (aula.valorPago !== null && aula.valorPago !== undefined && !isNaN(aula.valorPago))
+                ? aula.valorPago
+                : (valorHora > 0 ? (horas * valorHora).toFixed(2) : '');
+
+            document.getElementById('pag-row-index').value = aula.rowIndex;
+            document.getElementById('pag-info-aula').innerText = `${aula.aluno} • ${formatarDataBR(aula.valor)} • ${aula.conteudo}`;
+            document.getElementById('pag-valor').value = sugestaoValor;
+            document.getElementById('pag-forma').value = aula.formaPagamento || 'Pix';
+            document.getElementById('modal-pagamento').classList.remove('hidden');
+            document.getElementById('pag-valor').focus();
+        }
+
+        function fecharModalPagamento() {
+            document.getElementById('modal-pagamento').classList.add('hidden');
+        }
+
+        async function confirmarPagamentoAula() {
+            const rowIndex = document.getElementById('pag-row-index').value;
+            const valorPagoRaw = document.getElementById('pag-valor').value.trim();
+            const formaPagamento = document.getElementById('pag-forma').value.trim();
+
+            if (!valorPagoRaw || isNaN(parseFloat(valorPagoRaw))) {
+                return alert('Informe o valor pago.');
+            }
+            if (!formaPagamento) {
+                return alert('Informe a forma de pagamento.');
+            }
+
+            const btn = document.getElementById('btn-confirmar-pagamento');
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        senha: senhaAdminAtual,
+                        acao: 'registrar_pagamento',
+                        rowIndex: rowIndex,
+                        valorPago: parseFloat(valorPagoRaw),
+                        formaPagamento: formaPagamento
+                    })
+                });
+                const json = await res.json();
+
+                if (json.status === 'sucesso') {
+                    fecharModalPagamento();
+                    await carregarDados(true);
+                } else {
+                    alert('Erro: ' + json.mensagem);
+                }
+            } catch (err) {
+                alert('Erro ao salvar pagamento.');
+                console.error(err);
+            } finally {
+                btn.innerText = 'Marcar como Pago';
+                btn.disabled = false;
+            }
         }
 
         // --- POPUP DE RESUMO / ESTATÍSTICAS DO ALUNO ---
@@ -590,6 +736,8 @@
             let horasPagas = 0;
             let horasPendentes = 0;
             let aulasPagas = 0;
+            let valorRecebido = 0;
+            let valorPendente = 0;
             let dataMaisRecente = null;
             let dataMaisRecenteStr = '-';
 
@@ -606,8 +754,10 @@
                 if (a.pago) {
                     horasPagas += h;
                     aulasPagas += 1;
+                    valorRecebido += obterValorAulaRecebido(a, valorHora);
                 } else {
                     horasPendentes += h;
+                    valorPendente += h * valorHora;
                 }
 
                 const dt = parseDataBR(a.valor);
@@ -620,11 +770,9 @@
                 }
             });
 
-            // Total de aulas e horas
             document.getElementById('resumo-total-aulas').innerText = `${totalAulas}`;
             document.getElementById('resumo-total-horas').innerText = `${totalHoras.toFixed(1).replace('.0', '')}h no total`;
 
-            // Última aula há X dias
             if (dataMaisRecente) {
                 const diffMs = hoje.getTime() - dataMaisRecente.getTime();
                 const diffDias = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
@@ -641,22 +789,18 @@
                 document.getElementById('resumo-ultima-aula-data').innerText = 'Sem data';
             }
 
-            // Valores recebido e pendente
             const avisoValorHora = document.getElementById('resumo-aviso-valor-hora');
-            if (valorHora > 0) {
+            if (valorHora > 0 || valorRecebido > 0) {
                 avisoValorHora.classList.add('hidden');
-                document.getElementById('resumo-valor-recebido').innerText = formatarMoedaBR(horasPagas * valorHora);
-                document.getElementById('resumo-valor-pendente').innerText = formatarMoedaBR(horasPendentes * valorHora);
             } else {
                 avisoValorHora.classList.remove('hidden');
-                document.getElementById('resumo-valor-recebido').innerText = 'R$ 0,00';
-                document.getElementById('resumo-valor-pendente').innerText = 'R$ 0,00';
             }
 
+            document.getElementById('resumo-valor-recebido').innerText = formatarMoedaBR(valorRecebido);
+            document.getElementById('resumo-valor-pendente').innerText = formatarMoedaBR(valorPendente);
             document.getElementById('resumo-horas-pagas').innerText = `${horasPagas.toFixed(1).replace('.0', '')}h pagas`;
             document.getElementById('resumo-horas-pendentes').innerText = `${horasPendentes.toFixed(1).replace('.0', '')}h pendentes`;
 
-            // Dia(s) preferido(s) da semana
             const maxFreq = Math.max(...contagemDias);
             if (maxFreq > 0) {
                 const diasPreferidos = contagemDias
@@ -667,7 +811,6 @@
                 document.getElementById('resumo-dias-preferidos').innerText = '-';
             }
 
-            // Média por aula e taxa de pagamento
             if (totalAulas > 0) {
                 const mediaHoras = totalHoras / totalAulas;
                 const mediaTexto = `${mediaHoras.toFixed(1).replace('.0', '')}h/aula` + (valorHora > 0 ? ` (${formatarMoedaBR(mediaHoras * valorHora)})` : '');
@@ -681,6 +824,26 @@
             }
         }
 
+        function toggleCamposPagamentoForm() {
+            const pago = document.getElementById('form-pago').checked;
+            const box = document.getElementById('campos-pagamento-form');
+            if (pago) {
+                box.classList.remove('hidden');
+                if (!document.getElementById('form-valor-pago').value) {
+                    const horas = parseFloat(document.getElementById('form-horas').value) || 0;
+                    const valorHora = parseFloat(document.getElementById('valor-hora').value) || 0;
+                    if (horas > 0 && valorHora > 0) {
+                        document.getElementById('form-valor-pago').value = (horas * valorHora).toFixed(2);
+                    }
+                }
+                if (!document.getElementById('form-forma-pagamento').value) {
+                    document.getElementById('form-forma-pagamento').value = 'Pix';
+                }
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
         function abrirModalAula() {
             document.getElementById('titulo-modal-aula').innerText = 'Cadastrar Nova Aula';
             document.getElementById('edit-row-index').value = '';
@@ -690,6 +853,9 @@
             document.getElementById('form-horas').value = '1.5';
             document.getElementById('form-conteudo').value = '';
             document.getElementById('form-pago').checked = false;
+            document.getElementById('form-valor-pago').value = '';
+            document.getElementById('form-forma-pagamento').value = '';
+            toggleCamposPagamentoForm();
             document.getElementById('modal-aula').classList.remove('hidden');
         }
 
@@ -708,6 +874,9 @@
             document.getElementById('form-horas').value = aula.extra;
             document.getElementById('form-conteudo').value = aula.conteudo;
             document.getElementById('form-pago').checked = aula.pago;
+            document.getElementById('form-valor-pago').value = (aula.valorPago !== null && aula.valorPago !== undefined && !isNaN(aula.valorPago)) ? aula.valorPago : '';
+            document.getElementById('form-forma-pagamento').value = aula.formaPagamento || '';
+            toggleCamposPagamentoForm();
             document.getElementById('modal-aula').classList.remove('hidden');
         }
 
@@ -722,6 +891,8 @@
             const horas = document.getElementById('form-horas').value;
             const conteudo = document.getElementById('form-conteudo').value.trim();
             const pago = document.getElementById('form-pago').checked;
+            const valorPago = document.getElementById('form-valor-pago').value.trim();
+            const formaPagamento = document.getElementById('form-forma-pagamento').value.trim();
 
             if (!aluno || !dataISO || !conteudo) {
                 return alert('Preencha Aluno, Data e Conteúdo.');
@@ -743,7 +914,9 @@
                     data: dataBR,
                     horas: horas,
                     conteudo: conteudo,
-                    pago: pago
+                    pago: pago,
+                    valorPago: pago ? valorPago : '',
+                    formaPagamento: pago ? formaPagamento : ''
                 };
 
                 const res = await fetch(URL_APPS_SCRIPT, {
