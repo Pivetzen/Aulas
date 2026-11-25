@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal do Professor</title>
+    <title>Portal do Professor - Acesso Restrito</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -15,39 +15,61 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans">
-    <div class="max-w-6xl mx-auto">
+
+    <!-- TELA DE BLOQUEIO / LOGIN INICIAL -->
+    <div id="tela-bloqueio" class="min-h-[85vh] flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-md border border-gray-200 text-center">
+            <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-extrabold text-slate-800">Portal do Professor</h1>
+            <p class="text-xs text-slate-500 mt-1 mb-6">Acesso restrito ao administrador.</p>
+
+            <input
+                type="password"
+                id="input-senha-inicial"
+                placeholder="Digite a senha de admin"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-3 focus:outline-none focus:border-blue-500 text-sm text-center"
+                onkeydown="if(event.key==='Enter') autenticarAdmin()"
+            >
+            <button
+                id="btn-entrar-inicial"
+                onclick="autenticarAdmin()"
+                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl shadow-sm transition-all"
+            >
+                Acessar Painel
+            </button>
+            <p id="msg-erro-login" class="text-red-500 text-xs font-semibold mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL (OCULTO ATÉ AUTENTICAR) -->
+    <div id="app-conteudo" class="hidden max-w-6xl mx-auto">
         <!-- Cabeçalho -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Portal de Reforço</h1>
-                    <span id="badge-admin" class="hidden bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider border border-amber-300">Modo Admin</span>
+                    <span class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider border border-amber-300">Admin</span>
                 </div>
                 <p class="text-slate-500 text-sm font-medium">Gestão Pedagógica e Financeira</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Seletor de Aluno -->
                 <div class="flex items-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
                     <label class="mr-3 font-semibold text-slate-600 uppercase text-[10px] tracking-wider">Aluno:</label>
                     <select id="select-aluno" onchange="renderizarDados()" class="bg-transparent border-none focus:ring-0 text-blue-600 font-bold cursor-pointer text-base outline-none">
-                        <option value="">Carregando...</option>
+                        <option value="TODOS">📋 Todos os Alunos</option>
                     </select>
                 </div>
 
-                <!-- Botões Admin -->
-                <button id="btn-login-admin" onclick="abrirModalLogin()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Admin
-                </button>
-
-                <button id="btn-nova-aula" onclick="abrirModalAula()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                <button onclick="abrirModalAula()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
                     + Nova Aula
                 </button>
 
-                <button id="btn-sair-admin" onclick="sairAdmin()" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all">
+                <button onclick="bloquearPainel()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all">
                     Sair
                 </button>
             </div>
@@ -55,22 +77,19 @@
 
         <!-- Grid Principal -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Coluna Evolução -->
-            <div id="coluna-evolucao" class="lg:col-span-1">
+            <div id="coluna-evolucao" class="hidden lg:col-span-1">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-full">
                     <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center"><span class="w-2 h-6 bg-blue-500 rounded mr-2"></span>Evolução</h2>
                     <div id="container-progresso" class="space-y-6"></div>
                 </div>
             </div>
 
-            <!-- Coluna Histórico de Aulas -->
-            <div id="coluna-aulas" class="lg:col-span-2">
+            <div id="coluna-aulas" class="lg:col-span-3">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                         <h2 class="text-xl font-bold text-gray-800 flex items-center"><span class="w-2 h-6 bg-green-500 rounded mr-2"></span>Histórico de Aulas</h2>
                         
                         <div class="flex items-center gap-3 flex-wrap">
-                            <!-- Switch Apenas Pendentes -->
                             <label class="flex items-center cursor-pointer select-none text-sm">
                                 <span class="mr-2 font-bold text-slate-600 text-xs">Pendentes</span>
                                 <div class="relative">
@@ -80,13 +99,11 @@
                                 </div>
                             </label>
 
-                            <!-- Input Valor/Hora -->
                             <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
                                 <span class="text-slate-400 text-xs font-bold mr-1">R$</span>
                                 <input type="number" id="valor-hora" placeholder="Valor/h" min="0" step="0.01" class="bg-transparent text-xs font-bold text-slate-700 w-16 outline-none border-none p-0 focus:ring-0" />
                             </div>
 
-                            <!-- Botão Upload Logo -->
                             <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-xl border border-slate-200 transition-all flex items-center gap-1.5" title="Incluir logomarca no PDF">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -95,7 +112,6 @@
                                 <input type="file" id="input-logo" accept="image/png, image/jpeg" onchange="carregarLogo(event)" class="hidden" />
                             </label>
 
-                            <!-- Botão Gerar PDF -->
                             <button onclick="gerarPDF()" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -110,30 +126,17 @@
                             <thead>
                                 <tr class="text-slate-400 uppercase text-[10px] tracking-widest border-b border-slate-100">
                                     <th class="py-4 px-2">Data</th>
-                                    <th id="th-aluno" class="hidden py-4 px-2">Aluno</th>
+                                    <th id="th-aluno" class="py-4 px-2">Aluno</th>
                                     <th class="py-4 px-2">Conteúdo</th>
                                     <th class="py-4 px-2 text-center">Horas</th>
                                     <th class="py-4 px-2 text-right">Status</th>
-                                    <th id="th-acoes" class="hidden py-4 px-2 text-right">Ações</th>
+                                    <th class="py-4 px-2 text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-aulas" class="divide-y divide-slate-50"></tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Login Admin -->
-    <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100">
-            <h3 class="text-lg font-extrabold text-slate-800 mb-2">Acesso Administrador</h3>
-            <p class="text-xs text-slate-500 mb-4">Digite a senha para gerenciar todas as aulas.</p>
-            <input type="password" id="input-senha-admin" placeholder="Senha..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 mb-4 focus:outline-none focus:border-blue-500 text-sm" onkeydown="if(event.key==='Enter') confirmarLogin()">
-            <div class="flex justify-end gap-2">
-                <button onclick="fecharModalLogin()" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl">Cancelar</button>
-                <button onclick="confirmarLogin()" class="px-4 py-2 text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 rounded-xl">Entrar</button>
             </div>
         </div>
     </div>
@@ -181,74 +184,114 @@
     </div>
 
     <script>
-        const URL_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh5bjSs9NewAv_-WBTzeeSXHGsq-m1yQD_952R8Jppd3wCqJrTXogh_7tt87o1EmW1f2Y5d61dUFB5/pub?output=csv'; 
-        
-        // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT (Passo 1)
+        // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT (termina com /exec)
         const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbwpH_DJjASM67i0iU2oEXQU62eDOaGAyOFnlWKuCWxabDNlkEc4Ogn2SSKDw5pejtMQfQ/exec';
 
         let dadosGlobais = [];
-        let isAdmin = false;
         let senhaAdminAtual = '';
         let logoBase64 = localStorage.getItem('portal_professor_logo') || null;
+        let intervaloAtualizacao = null;
 
         if (logoBase64) {
             document.getElementById('label-logo').innerText = 'Logo Salva ✓';
         }
 
-        // --- CARREGAMENTO DE DADOS ---
-        async function carregarDados() {
+        function mostrarErroLogin(texto) {
+            const el = document.getElementById('msg-erro-login');
+            el.innerText = texto;
+            el.classList.remove('hidden');
+        }
+
+        async function autenticarAdmin() {
+            const senha = document.getElementById('input-senha-inicial').value.trim();
+            if (!senha) return mostrarErroLogin('Informe a senha de administrador.');
+
+            if (URL_APPS_SCRIPT.includes('COLE_SUA_URL')) {
+                return mostrarErroLogin('Configure a URL_APPS_SCRIPT no código.');
+            }
+
+            const btn = document.getElementById('btn-entrar-inicial');
+            btn.innerText = 'Verificando...';
+            btn.disabled = true;
+            document.getElementById('msg-erro-login').classList.add('hidden');
+
             try {
-                const urlFinal = URL_BASE.includes('?') 
-                    ? `${URL_BASE}&t=${new Date().getTime()}` 
-                    : `${URL_BASE}?t=${new Date().getTime()}`;
+                const res = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'listar', senha: senha })
+                });
+                const json = await res.json();
 
-                const response = await fetch(urlFinal);
-                const csvText = await response.text();
-                const linhas = csvText.split(/\r?\n/);
-                
-                // Mapeia mantendo o número exato da linha na planilha (índice + 1)
-                dadosGlobais = linhas.slice(1).map((l, idx) => {
-                    const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    return {
-                        rowIndex: idx + 2, // +1 do cabeçalho, +1 pois Sheets começa na linha 1
-                        tipo: c[0]?.replace(/"/g, '').trim(),
-                        conteudo: c[1]?.replace(/"/g, '').trim(),
-                        valor: c[2]?.replace(/"/g, '').trim(),
-                        extra: c[3]?.replace(/"/g, '').trim(),
-                        pago: c[4]?.replace(/"/g, '').trim()?.toLowerCase() === 'sim',
-                        aluno: c[5]?.replace(/"/g, '').trim()
-                    };
-                }).filter(item => item.aluno && item.aluno !== '# Selecione #');
+                if (json.status === 'sucesso') {
+                    senhaAdminAtual = senha;
+                    dadosGlobais = json.dados || [];
 
-                popularMenuAlunos();
-                renderizarDados();
-            } catch (e) { 
-                console.error("Erro:", e);
-                document.getElementById('select-aluno').innerHTML = '<option>Erro de Link</option>';
+                    document.getElementById('tela-bloqueio').classList.add('hidden');
+                    document.getElementById('app-conteudo').classList.remove('hidden');
+                    document.getElementById('input-senha-inicial').value = '';
+
+                    popularMenuAlunos();
+                    renderizarDados();
+
+                    if (intervaloAtualizacao) clearInterval(intervaloAtualizacao);
+                    intervaloAtualizacao = setInterval(() => carregarDados(true), 180000);
+                } else {
+                    mostrarErroLogin(json.mensagem || 'Senha incorreta.');
+                }
+            } catch (err) {
+                mostrarErroLogin('Erro ao conectar com o servidor.');
+                console.error(err);
+            } finally {
+                btn.innerText = 'Acessar Painel';
+                btn.disabled = false;
+            }
+        }
+
+        function bloquearPainel() {
+            senhaAdminAtual = '';
+            dadosGlobais = [];
+            if (intervaloAtualizacao) clearInterval(intervaloAtualizacao);
+            document.getElementById('app-conteudo').classList.add('hidden');
+            document.getElementById('tela-bloqueio').classList.remove('hidden');
+            document.getElementById('msg-erro-login').classList.add('hidden');
+            document.getElementById('input-senha-inicial').focus();
+        }
+
+        async function carregarDados(silencioso = false) {
+            if (!senhaAdminAtual) return;
+            try {
+                const res = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'listar', senha: senhaAdminAtual })
+                });
+                const json = await res.json();
+                if (json.status === 'sucesso') {
+                    dadosGlobais = json.dados || [];
+                    popularMenuAlunos();
+                    renderizarDados();
+                } else if (!silencioso) {
+                    alert('Sessão inválida. Faça login novamente.');
+                    bloquearPainel();
+                }
+            } catch (e) {
+                console.error('Erro ao atualizar dados:', e);
             }
         }
 
         function popularMenuAlunos() {
             const select = document.getElementById('select-aluno');
             const datalist = document.getElementById('lista-alunos-datalist');
-            
-            // Filtra nomes limpos para o menu (ignora sufixos (*1) se desejar, ou mantém todos)
             const alunosUnicos = [...new Set(dadosGlobais.map(d => d.aluno))].sort();
             const valorAtual = select.value;
 
-            if (alunosUnicos.length === 0) return;
-
-            let optionsHTML = '';
-            if (isAdmin) {
-                optionsHTML += `<option value="TODOS" ${valorAtual === 'TODOS' ? 'selected' : ''}>📋 Todos os Alunos</option>`;
-            }
+            let optionsHTML = `<option value="TODOS" ${valorAtual === 'TODOS' ? 'selected' : ''}>📋 Todos os Alunos</option>`;
             optionsHTML += alunosUnicos.map(nome => `<option value="${nome}" ${nome === valorAtual ? 'selected' : ''}>${nome}</option>`).join('');
-            
+
             select.innerHTML = optionsHTML;
             datalist.innerHTML = alunosUnicos.map(nome => `<option value="${nome}">`).join('');
 
-            if (!valorAtual || (valorAtual !== 'TODOS' && !alunosUnicos.includes(valorAtual))) {
-                select.value = isAdmin ? 'TODOS' : alunosUnicos[0];
+            if (valorAtual && valorAtual !== 'TODOS' && !alunosUnicos.includes(valorAtual)) {
+                select.value = 'TODOS';
             }
         }
 
@@ -261,9 +304,7 @@
             const colEvolucao = document.getElementById('coluna-evolucao');
             const colAulas = document.getElementById('coluna-aulas');
             const thAluno = document.getElementById('th-aluno');
-            const thAcoes = document.getElementById('th-acoes');
 
-            // Ajusta layout quando "Todos os Alunos" está selecionado no modo Admin
             if (selecionado === 'TODOS') {
                 colEvolucao.classList.add('hidden');
                 colAulas.classList.replace('lg:col-span-2', 'lg:col-span-3');
@@ -274,17 +315,11 @@
                 thAluno.classList.add('hidden');
             }
 
-            if (isAdmin) {
-                thAcoes.classList.remove('hidden');
-            } else {
-                thAcoes.classList.add('hidden');
-            }
-
-            cProgresso.innerHTML = ''; 
+            cProgresso.innerHTML = '';
             tAulas.innerHTML = '';
-            
-            const dadosFiltrados = selecionado === 'TODOS' 
-                ? dadosGlobais 
+
+            const dadosFiltrados = selecionado === 'TODOS'
+                ? dadosGlobais
                 : dadosGlobais.filter(d => d.aluno === selecionado);
 
             dadosFiltrados.forEach(i => {
@@ -311,57 +346,15 @@
                                 ${i.pago ? 'Pago' : 'Pendente'}
                             </span>
                         </td>
-                        ${isAdmin ? `
                         <td class="py-4 px-2 text-right whitespace-nowrap">
                             <button onclick="abrirModalEditar('${aulaJson}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-2" title="Editar / Remarcar">Editar</button>
                             <button onclick="cancelarAula(${i.rowIndex}, '${i.aluno}', '${i.valor}')" class="text-red-500 hover:text-red-700 font-bold text-xs" title="Cancelar / Excluir">Cancelar</button>
-                        </td>` : ''}
+                        </td>
                     </tr>`;
                 }
             });
         }
 
-        // --- CONTROLE DE ACESSO ADMIN ---
-        function abrirModalLogin() {
-            document.getElementById('modal-login').classList.remove('hidden');
-            document.getElementById('input-senha-admin').focus();
-        }
-
-        function fecharModalLogin() {
-            document.getElementById('modal-login').classList.add('hidden');
-            document.getElementById('input-senha-admin').value = '';
-        }
-
-        function confirmarLogin() {
-            const senha = document.getElementById('input-senha-admin').value;
-            if (!senha) return alert("Digite a senha.");
-            
-            senhaAdminAtual = senha;
-            isAdmin = true;
-            
-            document.getElementById('badge-admin').classList.remove('hidden');
-            document.getElementById('btn-login-admin').classList.add('hidden');
-            document.getElementById('btn-nova-aula').classList.remove('hidden');
-            document.getElementById('btn-sair-admin').classList.remove('hidden');
-            
-            fecharModalLogin();
-            popularMenuAlunos();
-            document.getElementById('select-aluno').value = 'TODOS';
-            renderizarDados();
-        }
-
-        function sairAdmin() {
-            isAdmin = false;
-            senhaAdminAtual = '';
-            document.getElementById('badge-admin').classList.add('hidden');
-            document.getElementById('btn-login-admin').classList.remove('hidden');
-            document.getElementById('btn-nova-aula').classList.add('hidden');
-            document.getElementById('btn-sair-admin').classList.add('hidden');
-            popularMenuAlunos();
-            renderizarDados();
-        }
-
-        // --- CADASTRO, EDIÇÃO / REMARCAÇÃO E CANCELAMENTO ---
         function abrirModalAula() {
             document.getElementById('titulo-modal-aula').innerText = 'Cadastrar Nova Aula';
             document.getElementById('edit-row-index').value = '';
@@ -379,13 +372,12 @@
             document.getElementById('titulo-modal-aula').innerText = 'Editar / Remarcar Aula';
             document.getElementById('edit-row-index').value = aula.rowIndex;
             document.getElementById('form-aluno').value = aula.aluno;
-            
-            // Converte DD/MM/AAAA para AAAA-MM-DD
+
             const partes = aula.valor.split('/');
             if (partes.length === 3) {
                 document.getElementById('form-data').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
             }
-            
+
             document.getElementById('form-horas').value = aula.extra;
             document.getElementById('form-conteudo').value = aula.conteudo;
             document.getElementById('form-pago').checked = aula.pago;
@@ -397,10 +389,6 @@
         }
 
         async function salvarAula() {
-            if (URL_APPS_SCRIPT.includes('COLE_SUA_URL')) {
-                return alert('Configure a URL_APPS_SCRIPT no código antes de salvar.');
-            }
-
             const rowIndex = document.getElementById('edit-row-index').value;
             const aluno = document.getElementById('form-aluno').value.trim();
             const dataISO = document.getElementById('form-data').value;
@@ -412,7 +400,6 @@
                 return alert('Preencha Aluno, Data e Conteúdo.');
             }
 
-            // Converte AAAA-MM-DD para DD/MM/AAAA (padrão da sua planilha)
             const [ano, mes, dia] = dataISO.split('-');
             const dataBR = `${dia}/${mes}/${ano}`;
 
@@ -441,8 +428,7 @@
                 if (json.status === 'sucesso') {
                     alert(json.mensagem);
                     fecharModalAula();
-                    // Aguarda 1.5s para o Google Sheets atualizar o CSV publicado
-                    setTimeout(carregarDados, 1500);
+                    await carregarDados(true);
                 } else {
                     alert('Erro: ' + json.mensagem);
                 }
@@ -471,7 +457,7 @@
 
                 if (json.status === 'sucesso') {
                     alert(json.mensagem);
-                    setTimeout(carregarDados, 1500);
+                    await carregarDados(true);
                 } else {
                     alert('Erro: ' + json.mensagem);
                 }
@@ -480,7 +466,6 @@
             }
         }
 
-        // --- UPLOAD DE LOGOMARCA E GERAÇÃO DE PDF ---
         function carregarLogo(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -497,7 +482,7 @@
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
+
             const alunoSelecionado = document.getElementById('select-aluno').value;
             if (!alunoSelecionado || alunoSelecionado === 'TODOS') {
                 return alert("Selecione um aluno específico no menu superior para gerar o PDF.");
@@ -516,12 +501,9 @@
             const totalHoras = aulasPendentes.reduce((acc, curr) => acc + (parseFloat(curr.extra) || 0), 0);
             const valorTotalDevido = totalHoras * valorHora;
 
-            // Espaço para Logomarca no canto superior direito (ou esquerdo)
             if (logoBase64) {
-                // Posição: X=160, Y=12, Largura=35, Altura=18 (proporcional)
                 doc.addImage(logoBase64, 'PNG', 160, 12, 35, 18);
             } else {
-                // Moldura discreta opcional caso não tenha logo carregada
                 doc.setDrawColor(220, 220, 220);
                 doc.rect(160, 12, 35, 18);
                 doc.setFontSize(8);
@@ -530,22 +512,21 @@
                 doc.setTextColor(0, 0, 0);
             }
 
-            // Título e Cabeçalho do Relatório
             doc.setFont("helvetica", "bold");
             doc.setFontSize(18);
             doc.text("Relatório de Aulas Pendentes", 14, 20);
-            
+
             doc.setFontSize(11);
             doc.setFont("helvetica", "normal");
             doc.text(`Aluno: ${alunoSelecionado}`, 14, 28);
             doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 34);
-            
+
             if (valorHora > 0) {
                 doc.text(`Valor da Hora-Aula: R$ ${valorHora.toFixed(2).replace('.', ',')}`, 14, 40);
             }
 
             const tableRows = aulasPendentes.map(aula => [
-                aula.valor, 
+                aula.valor,
                 aula.conteudo,
                 `${aula.extra}h`,
                 "Pendente"
@@ -555,7 +536,7 @@
                 startY: valorHora > 0 ? 48 : 44,
                 head: [['Data', 'Conteúdo', 'Horas', 'Status']],
                 body: tableRows,
-                headStyles: { fillColor: [239, 68, 68] }, 
+                headStyles: { fillColor: [239, 68, 68] },
                 theme: 'striped',
                 margin: { left: 14, right: 14 }
             });
@@ -563,21 +544,18 @@
             let finalY = doc.lastAutoTable.finalY + 12;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(11);
-            
+
             doc.text(`Total de Horas Pendentes: ${totalHoras}h`, 14, finalY);
-            
+
             if (valorHora > 0) {
                 finalY += 6;
                 doc.setFontSize(13);
-                doc.setTextColor(185, 28, 28); 
+                doc.setTextColor(185, 28, 28);
                 doc.text(`Valor Total Pendente: R$ ${valorTotalDevido.toFixed(2).replace('.', ',')}`, 14, finalY);
             }
 
             doc.save(`Relatorio_Financeiro_${alunoSelecionado.replace(/\s+/g, '_')}.pdf`);
         }
-
-        carregarDados();
-        setInterval(carregarDados, 180000);
     </script>
 </body>
 </html>
